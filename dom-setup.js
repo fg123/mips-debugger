@@ -22,6 +22,12 @@ function makeMarker() {
 
 const regInitial = document.querySelector('div.initial');
 const registerInputs = [];
+
+const memorySelect = document.querySelector('div.memory select');
+const options = [];
+let memoryStart = parseInt("0xffff88");
+const memoryEnd = parseInt("0x01000000");
+
 function domReset() {
     regInitial.innerHTML = '';
     registerInputs.length = 0;
@@ -40,5 +46,13 @@ function domReset() {
         regInitial.append(div);
         registerInputs.push(div.querySelector('input'));
     }    
+
+    options.length = 0;
+    for (let i = memoryStart; i <= memoryEnd; i += 4) {
+        const option = document.createElement('option');
+        option.innerHTML = '0x' + i.toString(16).padStart(8, '0') + ': 0';
+        memorySelect.append(option);
+        options.push(option);
+    }
 }
 domReset();

@@ -37,6 +37,11 @@ div.initial, div.initial * {
     font-family: monospace;
 }
 
+div.compiler {
+    display: flex;
+    flex-direction: column;
+}
+
 div.initial span {
     padding: 2px;
 }
@@ -47,4 +52,16 @@ div.CodeMirror-gutter.breakpoints {
 
 div.active {
     background: blue;
+}
+
+div.belowControl {
+    display: flex;
+    flex-direction: row;
+    flex: 1 1 auto;
+}
+
+div.memory select {
+    height: 100%;
+    font-family: monospace;
+    font-size: 12px;
 }

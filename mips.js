@@ -269,7 +269,17 @@ function updateUI(state) {
         registerInputs[i].value = state.registers[i]
             .toString(16).padStart(8, '0');
     }
-    registerInputs[32].value = state.pc.toString(16);
+    registerInputs[32].value = state.pc.toString(16).padStart(8, '0');
+
+    for (let i = memoryStart; i <= memoryEnd; i += 4) {
+        let item = state.memory[i / 4];
+        if (item === undefined) {
+            item = 0;
+        }
+        options[(i - memoryStart) / 4].innerHTML =
+            '0x' + i.toString(16).padStart(8, '0') + ': ' +
+             item;
+    }
 }
 
 function compile(code) {
