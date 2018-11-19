@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>MIPS Debugger</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" media="screen" href="main.css" />
+
+    <!-- Code Mirror -->
+    <script src="lib/codemirror.js"></script>
+    <link rel="stylesheet" href="lib/codemirror.css">
+    <script src="addon-simple-mode.js"></script>
+    <script src="mips-mode.js"></script>
+</head>
+<body>
+    <div class="header">
+        <h2>Mips Debugger</h2>
+    </div>
+    <div class="wrapper">
+        <div class="editor">
+            <textarea>
+    lis $4
+    .word 4
+    lis $11
+    .word 1
+    .import print
+    lis $28
+    .word print
+
+    ;; Prolog
+    sub $29, $30, $4         ; init fp
+    lis $12
+    .word 8
+    sub $30, $30, $12        ; push stack frame
+    sw $1, 0($29)            ; store a
+    sw $2, -4($29)           ; store b
+
+    ;; Declarations
+
+    ;; Body
+    lw $3, 0($29)
+    sw $3, -4($30)
+    sub $30, $30, $4
+    lw $3, -4($29)
+    add $30, $30, $4
+    lw $5, -4($30)
+    slt $3, $5, $3
+    beq $0, $3, L1
+    lis $3
+    .word 2
+    lis $5
+    .word 0
+    add $5, $5, $29
+    sw $3, 0($5)
+    beq $0, $0, L0
+L1:
+    lis $3
+    .word 3
+    lis $5
+    .word 0
+    add $5, $5, $29
+    sw $3, 0($5)
+L0:
+
+    ;; Return
+    lw $3, 0($29)
+
+    ;; Epilog
+    add $30, $29, $4
+    jr $31
+            </textarea>
+        </div>
+        <div class="compiler">
+            <div class="initial">
+                <!-- JS will inject in here -->
+            </div>
+            <div class="controls">
+                <button onclick="run()">Run</button>
+                <button onclick="stop()">Stop</button>
+                <button onclick="reset()">Reset</button>
+
+
+                <button onclick="continueExecution(true, true)">Next</button>
+                <button onclick="continueExecution(true, false)">Continue</button>
+            </div>
+            <div class="output"></div>
+        </div>
+    </div>
+    <script src="dom-setup.js"></script>
+    <script src="mips.js"></script>
+</body>
+</html>
