@@ -149,7 +149,7 @@ const actions = {
         const from = getRegister(args[0]);
         const offset = parseInt(args[1]);
         const dest = getRegister(args[2]);
-        saveToMemory(state, 
+        saveToMemory(state,
             state.registers[dest] + offset,
             state.registers[from]);
     },
@@ -202,7 +202,7 @@ const actions = {
     }
 };
 
-const OS = parseInt('0xDEADBEEF');
+const OS = parseInt('0x8123456C');
 
 function continueExecution(ignoreNextBreak, forceOne) {
     const code = currentState.code;
@@ -235,7 +235,7 @@ function continueExecution(ignoreNextBreak, forceOne) {
             updateUI(state);
             if (state.pc === OS) {
                 if (state.lastLine !== undefined) {
-                    codeMirror.removeLineClass(state.lastLine,      
+                    codeMirror.removeLineClass(state.lastLine,
                         "background", "active");
                 }
                 stop();
@@ -276,9 +276,12 @@ function updateUI(state) {
         if (item === undefined) {
             item = 0;
         }
+        let label = "";
+        if (i === state.registers[29]) label += "(FP)";
+        if (i === state.registers[30]) label += "(SP)";
         options[(i - memoryStart) / 4].innerHTML =
             '0x' + i.toString(16).padStart(8, '0') + ': ' +
-             item;
+            '0x' + item.toString(16).padStart(8, '0') + label;
     }
 }
 

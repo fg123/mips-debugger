@@ -30,12 +30,13 @@ const memoryEnd = parseInt("0x01000000");
 
 function domReset() {
     regInitial.innerHTML = '';
+    memorySelect.innerHTML = '';
     registerInputs.length = 0;
     for (let i = 0; i < 33; i++) {
         const div = document.createElement('div');
         const n = i;
         const label = i !== 32 ? (n < 10 ? '0' + n : n) : "<b>pc</b>"
-        const value = i === 31 ? "DEADBEEF" : i === 30 ? "1000000" : "0";
+        const value = i === 31 ? "8123456C" : i === 30 ? "1000000" : "0";
         div.innerHTML = `
             <span>${label}: 0x</span>
             <input pattern="[0-9a-fA-F]+"
@@ -45,7 +46,7 @@ function domReset() {
         `;
         regInitial.append(div);
         registerInputs.push(div.querySelector('input'));
-    }    
+    }
 
     options.length = 0;
     for (let i = memoryStart; i <= memoryEnd; i += 4) {
