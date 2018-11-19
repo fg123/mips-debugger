@@ -234,6 +234,10 @@ function continueExecution(ignoreNextBreak, forceOne) {
             emulate(line, parts, state);
             updateUI(state);
             if (state.pc === OS) {
+                if (state.lastLine !== undefined) {
+                    codeMirror.removeLineClass(state.lastLine,      
+                        "background", "active");
+                }
                 stop();
                 return;
             }
@@ -262,7 +266,8 @@ function emulate(line, parts, state) {
 function updateUI(state) {
     /* Registers */
     for (let i = 0; i < 32; i++) {
-        registerInputs[i].value = state.registers[i].toString(16);
+        registerInputs[i].value = state.registers[i]
+            .toString(16).padStart(8, '0');
     }
     registerInputs[32].value = state.pc.toString(16);
 }
