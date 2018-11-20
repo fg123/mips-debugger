@@ -20,6 +20,8 @@ function makeMarker() {
     return marker;
 }
 
+const outputTextarea = document.querySelector('div.output textarea');
+
 const regInitial = document.querySelector('div.initial');
 const registerInputs = [];
 
@@ -29,6 +31,7 @@ let memoryStart = parseInt("0xffff88");
 const memoryEnd = parseInt("0x01000000");
 
 function domReset() {
+    outputTextarea.innerHTML = 'Output:\n';
     regInitial.innerHTML = '';
     memorySelect.innerHTML = '';
     registerInputs.length = 0;

@@ -65,3 +65,16 @@ div.memory select {
     font-family: monospace;
     font-size: 12px;
 }
+
+div.output {
+    width: 100%;
+    font-family: monospace;
+    font-size: 12px;
+}
+
+div.output textarea {
+    width: 90%;
+    height: 90%;
+    font-family: monospace;
+    font-size: 12px;
+}

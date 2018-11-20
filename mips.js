@@ -40,6 +40,7 @@ function run() {
         currentlyRunning = true;
         console.log(codeMirror);
         codeMirror.options.readOnly = "nocursor";
+        outputTextarea.innerHTML = 'Output:\n';
         registerInputs.forEach(input => { input.disabled = true; });
         mips(codeMirror.getValue());
     }
@@ -82,7 +83,15 @@ function loadFromMemory(state, address) {
         return item;
     }
     else if (item.code[0] === '.word') {
-        /* Some kind of code */
+        if (isNaN(item.code[1])) {
+            /* Some kind of label */
+            const label = item.code[1];
+            if (label === 'print') {
+                /* special, if you try to jump to 1111, it's print */
+                return new Int32(1111);
+            }
+            return new Int32(state.symbolTable[label]);
+        }
         return new Int32(parseInt(item.code[1]));
     }
     console.log(item);
@@ -214,13 +223,24 @@ const actions = {
     },
     jr(state, args) {
         const register = getRegister(args[0]);
+        const jumpTo = state.registers[register].toUnsigned();
+        if (jumpTo === 1111) {
+            /* Special Print */
+            outputTextarea.innerHTML += state.registers[1].toSigned().toString() + "\n";
+            return;
+        }
         state.pc = state.registers[register].toUnsigned();
     },
     jalr(state, args) {
         const register = getRegister(args[0]);
-        const tmp = state.registers[register].toUnsigned();
+        const jumpTo = state.registers[register].toUnsigned();
+        if (jumpTo === 1111) {
+            /* Special Print */
+            outputTextarea.innerHTML += state.registers[1].toSigned().toString() + "\n";
+            return;
+        }
         state.registers[31] = new Int32(state.pc);
-        state.pc = tmp;
+        state.pc = jumpTo;
     }
 };
 
@@ -234,7 +254,7 @@ function continueExecution(ignoreNextBreak, forceOne) {
             const line = code[state.pc / 4].line;
             const parts = code[state.pc / 4].code;
             if (state.lastLine !== undefined) {
-                codeMirror.removeLineClass(state.lastLine, "background",    "active");
+                codeMirror.removeLineClass(state.lastLine, "background", "active");
             }
             if (parts[0][0] !== '.') {
                 state.lastLine = line;
