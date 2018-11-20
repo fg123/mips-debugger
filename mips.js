@@ -5,7 +5,7 @@ let currentState = { code: undefined, state: undefined };
 
 function createEmulatorState() {
     const obj = {
-        registers: Array(32).fill(0, 0, 32),
+        registers: Array(32),
         pc: 0,
         memory: Array(16777216),
         hi: 0,
@@ -14,7 +14,7 @@ function createEmulatorState() {
         lastLine: undefined
     };
     for (let i = 0; i < 32; i++) {
-        obj.registers[i] = parseInt('0x' + registerInputs[i].value);
+        obj.registers[i] = new Int32(parseInt('0x' + registerInputs[i].value));
     }
     return obj;
 };
@@ -76,12 +76,14 @@ function loadFromMemory(state, address) {
         throw 'Unaligned memory access!';
     }
     const item = state.memory[address / 4];
-    if (typeof item === 'number') {
+    if (item === undefined) {
+        return new Int32(0);
+    } else if (item instanceof Int32) {
         return item;
     }
     else if (item.code[0] === '.word') {
         /* Some kind of code */
-        return parseInt(item.code[1]);
+        return new Int32(parseInt(item.code[1]));
     }
     console.log(item);
     throw 'Cannot get memory of code that\'s not .word!';
@@ -100,35 +102,48 @@ const actions = {
         const lhs = getRegister(args[1]);
         const rhs = getRegister(args[2]);
         state.registers[dest] =
-            state.registers[lhs] + state.registers[rhs];
+            new Int32(state.registers[lhs].toSigned() + state.registers[rhs].toSigned());
     },
     sub(state, args) {
         const dest = getRegister(args[0]);
         const lhs = getRegister(args[1]);
         const rhs = getRegister(args[2]);
         state.registers[dest] =
-            state.registers[lhs] - state.registers[rhs];
+            new Int32(state.registers[lhs].toSigned() - state.registers[rhs].toSigned());
     },
     mult(state, args) {
         const lhs = getRegister(args[0]);
         const rhs = getRegister(args[1]);
-        const result = dec2bin(lhs * rhs);
+        const result = dec2bin(state.registers[lhs].toSigned() * state.registers[rhs].toSigned());
+        state.lo = result.substr(32, 32);
+        state.hi = result.substr(0, 32);
+    },
+    multu(state, args) {
+        const lhs = getRegister(args[0]);
+        const rhs = getRegister(args[1]);
+        const result = dec2bin(state.registers[lhs].toUnsigned() * state.registers[rhs].toUnsigned());
         state.lo = result.substr(32, 32);
         state.hi = result.substr(0, 32);
     },
     div(state, args) {
         const lhs = getRegister(args[0]);
         const rhs = getRegister(args[1]);
-        state.lo = Math.floor(lhs / rhs);
-        state.hi = lhs % rhs;
+        state.lo = Math.floor(state.registers[lhs].toSigned() / state.registers[rhs].toSigned());
+        state.hi = state.registers[lhs].toSigned() % state.registers[rhs].toSigned();
+    },
+    divu(state, args) {
+        const lhs = getRegister(args[0]);
+        const rhs = getRegister(args[1]);
+        state.lo = Math.floor(state.registers[lhs].toUnsigned() / state.registers[rhs].toUnsigned());
+        state.hi = state.registers[lhs].toUnsigned() % state.registers[rhs].toUnsigned();
     },
     mfhi(state, args) {
         const dest = getRegister(args[0]);
-        state.registers[dest] = state.hi;
+        state.registers[dest] = new Int32(state.hi);
     },
     mflo(state, args) {
         const dest = getRegister(args[0]);
-        state.registers[dest] = state.lo;
+        state.registers[dest] = new Int32(state.lo);
     },
     lis(state, args) {
         const dest = getRegister(args[0]);
@@ -142,7 +157,7 @@ const actions = {
         const source = getRegister(args[2]);
         state.registers[dest] = loadFromMemory(
             state,
-            state.registers[source] + offset
+            state.registers[source].toUnsigned() + offset
         );
     },
     sw(state, args) {
@@ -150,15 +165,22 @@ const actions = {
         const offset = parseInt(args[1]);
         const dest = getRegister(args[2]);
         saveToMemory(state,
-            state.registers[dest] + offset,
+            state.registers[dest].toUnsigned() + offset,
             state.registers[from]);
     },
     slt(state, args) {
         const dest = getRegister(args[0]);
         const lhs = getRegister(args[1]);
         const rhs = getRegister(args[2]);
-        state.registers[dest] =
-            state.registers[lhs] < state.registers[rhs] ? 1 : 0;
+        state.registers[dest] = new Int32(
+            state.registers[lhs].toSigned() < state.registers[rhs].toSigned() ? 1 : 0);
+    },
+    slt(state, args) {
+        const dest = getRegister(args[0]);
+        const lhs = getRegister(args[1]);
+        const rhs = getRegister(args[2]);
+        state.registers[dest] = new Int32(
+            state.registers[lhs].toUnsigned() < state.registers[rhs].toUnsigned() ? 1 : 0);
     },
     beq(state, args) {
         const lhs = getRegister(args[0]);
@@ -171,7 +193,7 @@ const actions = {
         else {
             offset = parseInt(args[2]);
         }
-        if (lhs == rhs) {
+        if (state.registers[lhs].toUnsigned() == state.registers[rhs].toUnsigned()) {
             state.pc += offset * 4;
         }
     },
@@ -186,18 +208,18 @@ const actions = {
         else {
             offset = parseInt(args[2]);
         }
-        if (lhs != rhs) {
+        if (state.registers[lhs].toUnsigned() != state.registers[rhs].toUnsigned()) {
             state.pc += offset * 4;
         }
     },
     jr(state, args) {
         const register = getRegister(args[0]);
-        state.pc = state.registers[register];
+        state.pc = state.registers[register].toUnsigned();
     },
     jalr(state, args) {
         const register = getRegister(args[0]);
-        const tmp = state.registers[register];
-        state.registers[31] = state.pc;
+        const tmp = state.registers[register].toUnsigned();
+        state.registers[31] = new Int32(state.pc);
         state.pc = tmp;
     }
 };
@@ -266,8 +288,7 @@ function emulate(line, parts, state) {
 function updateUI(state) {
     /* Registers */
     for (let i = 0; i < 32; i++) {
-        registerInputs[i].value = state.registers[i]
-            .toString(16).padStart(8, '0');
+        registerInputs[i].value = state.registers[i].toString();
     }
     registerInputs[32].value = state.pc.toString(16).padStart(8, '0');
 
@@ -277,8 +298,8 @@ function updateUI(state) {
             item = 0;
         }
         let label = "";
-        if (i === state.registers[29]) label += "(FP)";
-        if (i === state.registers[30]) label += "(SP)";
+        if (i === state.registers[29].toUnsigned()) label += "(FP)";
+        if (i === state.registers[30].toUnsigned()) label += "(SP)";
         options[(i - memoryStart) / 4].innerHTML =
             '0x' + i.toString(16).padStart(8, '0') + ': ' +
             '0x' + item.toString(16).padStart(8, '0') + label;
