@@ -31,6 +31,11 @@ function mips(input) {
     for (let i = 0; i < compiled.code.length; i++) {
         emulatorState.memory[i] = compiled.code[i];
     }
+    for (let i = 0; i < compiled.memoryInitial.length; i++) {
+        const initial = compiled.memoryInitial[i];
+        emulatorState.memory[initial.location / 4] = initial.number;
+    }
+
     currentState = { code: compiled.code, state: emulatorState }
     continueExecution(false, false);
 }
@@ -124,15 +129,15 @@ const actions = {
         const lhs = getRegister(args[0]);
         const rhs = getRegister(args[1]);
         const result = dec2bin(state.registers[lhs].toSigned() * state.registers[rhs].toSigned());
-        state.lo = result.substr(32, 32);
-        state.hi = result.substr(0, 32);
+        state.lo = parseInt("0b" + result.substr(32, 32));
+        state.hi = parseInt("0b" + result.substr(0, 32));
     },
     multu(state, args) {
         const lhs = getRegister(args[0]);
         const rhs = getRegister(args[1]);
         const result = dec2bin(state.registers[lhs].toUnsigned() * state.registers[rhs].toUnsigned());
-        state.lo = result.substr(32, 32);
-        state.hi = result.substr(0, 32);
+        state.lo = parseInt("0b" + result.substr(32, 32));
+        state.hi = parseInt("0b" + result.substr(0, 32));
     },
     div(state, args) {
         const lhs = getRegister(args[0]);
@@ -164,6 +169,7 @@ const actions = {
         const dest = getRegister(args[0]);
         const offset = parseInt(args[1]);
         const source = getRegister(args[2]);
+        console.log("Load word ")
         state.registers[dest] = loadFromMemory(
             state,
             state.registers[source].toUnsigned() + offset
@@ -197,7 +203,7 @@ const actions = {
         let offset = 0;
         if (isNaN(args[2])) {
             // Must be a String / Symbol
-            offset = (state.symbolTable[args[2]] - state.pc - 4) / 4;
+            offset = (state.symbolTable[args[2]] - state.pc) / 4;
         }
         else {
             offset = parseInt(args[2]);
@@ -212,7 +218,7 @@ const actions = {
         let offset = 0;
         if (isNaN(args[2])) {
             // Must be a String / Symbol
-            offset = (state.symbolTable[args[2]] - state.pc - 4) / 4;
+            offset = (state.symbolTable[args[2]] - state.pc) / 4;
         }
         else {
             offset = parseInt(args[2]);
@@ -293,9 +299,9 @@ function continueExecution(ignoreNextBreak, forceOne) {
 
 /* Runs one step */
 function emulate(line, parts, state) {
-    console.log ('Emulating ' + parts[0]);
     try {
         if (parts[0][0] !== '.') {
+            console.log ('Emulating ' + parts[0]);
             actions[parts[0]](state, parts.slice(1, parts.length));
         }
     }
@@ -329,6 +335,7 @@ function updateUI(state) {
 function compile(code) {
     const symbolTable = {};
     const result = [];
+    const memoryInitial = [];
     for (let i = 0; i < code.length; i++) {
         let line = code[i];
         const cIdx = line.indexOf(';');
@@ -349,6 +356,14 @@ function compile(code) {
             symbolTable[label] = result.length * 4;
             parts.splice(0, 1);
         }
+        if (parts[0] === '.memory') {
+            if (parts[1] && parts[2]) {
+                memoryInitial.push({
+                    location: parseInt(parts[1]),
+                    number: new Int32(parseInt(parts[2]))
+                });
+            }
+        }
         if (parts[0]) {
             result.push({
                 line: i,
@@ -356,5 +371,5 @@ function compile(code) {
             });
         }
     }
-    return { code: result, symbolTable };
+    return { code: result, symbolTable, memoryInitial };
 }
