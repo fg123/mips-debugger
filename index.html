@@ -22,52 +22,19 @@
             <textarea>
     lis $4
     .word 4
-    lis $11
-    .word 1
     .import print
     lis $28
     .word print
 
-    ;; Prolog
-    sub $29, $30, $4         ; init fp
-    lis $12
-    .word 8
-    sub $30, $30, $12        ; push stack frame
-    sw $1, 0($29)            ; store a
-    sw $2, -4($29)           ; store b
+    
+    sw $31, -4($30)
+    sub $30, $30, $4        
 
-    ;; Declarations
+    jalr $28
 
-    ;; Body
-    lw $3, 0($29)
-    sw $3, -4($30)
-    sub $30, $30, $4
-    lw $3, -4($29)
     add $30, $30, $4
-    lw $5, -4($30)
-    slt $3, $5, $3
-    beq $0, $3, L1
-    lis $3
-    .word 2
-    lis $5
-    .word 0
-    add $5, $5, $29
-    sw $3, 0($5)
-    beq $0, $0, L0
-L1:
-    lis $3
-    .word 3
-    lis $5
-    .word 0
-    add $5, $5, $29
-    sw $3, 0($5)
-L0:
+    lw $31, -4($30)
 
-    ;; Return
-    lw $3, 0($29)
-
-    ;; Epilog
-    add $30, $29, $4
     jr $31
             </textarea>
         </div>
