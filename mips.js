@@ -128,16 +128,16 @@ const actions = {
     mult(state, args) {
         const lhs = getRegister(args[0]);
         const rhs = getRegister(args[1]);
-        const result = dec2bin(state.registers[lhs].toSigned() * state.registers[rhs].toSigned());
-        state.lo = parseInt("0b" + result.substr(32, 32));
-        state.hi = parseInt("0b" + result.substr(0, 32));
+        const result = state.registers[lhs].toSigned() * state.registers[rhs].toSigned();
+        state.lo = result;
+        // state.hi = parseInt(result.substr(0, 32), 2);
     },
     multu(state, args) {
         const lhs = getRegister(args[0]);
         const rhs = getRegister(args[1]);
-        const result = dec2bin(state.registers[lhs].toUnsigned() * state.registers[rhs].toUnsigned());
-        state.lo = parseInt("0b" + result.substr(32, 32));
-        state.hi = parseInt("0b" + result.substr(0, 32));
+        const result = state.registers[lhs].toUnsigned() * state.registers[rhs].toUnsigned();
+        state.lo = result;
+        // state.hi = parseInt(result.substr(0, 32), 2);
     },
     div(state, args) {
         const lhs = getRegister(args[0]);
