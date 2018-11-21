@@ -1,8 +1,12 @@
+* {
+    box-sizing: border-box;
+}
+
 html, body {
     width: 100%;
     height: 100%;
     margin: 0px;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 body {
@@ -10,8 +14,18 @@ body {
     flex-direction: column;
 }
 
+div.header {
+    padding: 5px;
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+}
+
 h2 {
-    margin: 5px;
+    margin: 0;
+}
+div.header h2 {
+    flex-grow: 1;
 }
 
 div.wrapper {
